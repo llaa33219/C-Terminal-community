@@ -591,7 +591,14 @@ function methodNotAllowed() {
 }
 
 async function handleStaticFiles(request, env) {
-  // For static file serving, you might want to implement caching
-  // or redirect to your actual static hosting
-  return new Response('Static file serving not implemented', { status: 404 });
+  // Serve static files from Cloudflare Pages
+  try {
+    return await env.ASSETS.fetch(request);
+  } catch (error) {
+    // If ASSETS is not available or file not found, return 404
+    return new Response('File not found', { 
+      status: 404,
+      headers: { 'Content-Type': 'text/plain' }
+    });
+  }
 } 
