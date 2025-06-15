@@ -311,17 +311,33 @@ async function createPost(request, env) {
       });
     }
 
+    // Validate required fields
+    if (!postData.title || !postData.content || !postData.category) {
+      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
     // Generate post ID
     const postId = generateId();
     
     const post = {
       id: postId,
-      ...postData,
+      title: postData.title,
+      content: postData.content,
+      category: postData.category,
+      author: postData.author || {
+        id: userId,
+        name: 'Unknown User',
+        avatar: 'data:image/svg+xml;charset=utf-8,<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="%23667eea"/><text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-family="Arial">👤</text></svg>'
+      },
       authorId: userId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       likes: 0,
-      comments: 0
+      comments: 0,
+      liked: false
     };
 
     // Store in KV
@@ -334,6 +350,7 @@ async function createPost(request, env) {
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
+    console.error('Error creating post:', error);
     return new Response(JSON.stringify({ error: 'Failed to create post' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }

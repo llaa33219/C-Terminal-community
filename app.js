@@ -327,20 +327,20 @@ function renderPosts(postsToRender) {
         <div class="post-card">
             <div class="post-header">
                 <span class="post-category">${getCategoryName(post.category)}</span>
-                <span class="post-time">${post.time}</span>
+                <span class="post-time">${post.time || formatDate(post.createdAt)}</span>
             </div>
-            <h3 class="post-title" onclick="showPostDetail('${post.id}')">${post.title}</h3>
+            <h3 class="post-title" onclick="showPostDetail('${post.id}')">${post.title || '제목 없음'}</h3>
             <div class="post-author">
-                <img src="${post.author.avatar}" alt="${post.author.name}" class="post-author-avatar">
-                <span class="post-author-name">${post.author.name}</span>
+                <img src="${post.author?.avatar || 'data:image/svg+xml;charset=utf-8,<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="%23667eea"/><text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-family="Arial">👤</text></svg>'}" alt="${post.author?.name || '익명'}" class="post-author-avatar">
+                <span class="post-author-name">${post.author?.name || '익명'}</span>
             </div>
-            <p class="post-content">${post.content}</p>
+            <p class="post-content">${post.content || ''}</p>
             <div class="post-actions">
                 <span class="post-action ${post.liked ? 'liked' : ''}" onclick="toggleLike('${post.id}')">
-                    ❤️ ${post.likes}
+                    ❤️ ${post.likes || 0}
                 </span>
                 <span class="post-action" onclick="showPostDetail('${post.id}')">
-                    💬 ${post.comments}
+                    💬 ${post.comments || 0}
                 </span>
                 <span class="post-action">
                     📎 첨부파일
@@ -401,19 +401,38 @@ async function toggleLike(postId) {
     }
 }
 
-function handlePostSubmit(e) {
+async function handlePostSubmit(e) {
     e.preventDefault();
     
+    if (!currentUser) {
+        await showCustomAlert('로그인 필요', '게시글을 작성하려면 로그인이 필요합니다.');
+        return;
+    }
+    
     const formData = new FormData(e.target);
+    const title = formData.get('title');
+    const content = formData.get('content');
+    const category = formData.get('category');
+    
+    if (!title || !content) {
+        await showCustomAlert('입력 오류', '제목과 내용을 모두 입력해주세요.');
+        return;
+    }
+    
     const postData = {
-        category: formData.get('category'),
-        title: formData.get('title'),
-        content: formData.get('content'),
-        files: formData.getAll('files')
+        category: category,
+        title: title,
+        content: content,
+        author: {
+            id: currentUser.id,
+            name: currentUser.name,
+            email: currentUser.email,
+            avatar: currentUser.picture
+        }
     };
     
     // Send to backend
-    createPost(postData);
+    await createPost(postData);
     
     // Close modal
     document.getElementById('post-modal').classList.remove('show');
@@ -814,14 +833,23 @@ function updateProfileTabActive(activeTab) {
 }
 
 function formatDate(dateString) {
+    if (!dateString) return '방금 전';
+    
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return '방금 전';
+    
     const now = new Date();
     const diff = now - date;
+    const diffMinutes = Math.floor(diff / (1000 * 60));
+    const diffHours = Math.floor(diff / (1000 * 60 * 60));
     const diffDays = Math.floor(diff / (1000 * 60 * 60 * 24));
     
-    if (diffDays < 1) {
-        const diffHours = Math.floor(diff / (1000 * 60 * 60));
-        return diffHours < 1 ? '방금 전' : `${diffHours}시간 전`;
+    if (diffMinutes < 1) {
+        return '방금 전';
+    } else if (diffMinutes < 60) {
+        return `${diffMinutes}분 전`;
+    } else if (diffHours < 24) {
+        return `${diffHours}시간 전`;
     } else if (diffDays < 7) {
         return `${diffDays}일 전`;
     } else {
@@ -1114,14 +1142,14 @@ async function showPostDetail(postId) {
     }
     
     // Populate post detail modal
-    document.getElementById('post-detail-title').textContent = post.title;
-    document.getElementById('post-detail-avatar').src = post.author.avatar;
-    document.getElementById('post-detail-author-name').textContent = post.author.name;
-    document.getElementById('post-detail-time').textContent = post.time;
+    document.getElementById('post-detail-title').textContent = post.title || '제목 없음';
+    document.getElementById('post-detail-avatar').src = post.author?.avatar || 'data:image/svg+xml;charset=utf-8,<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="%23667eea"/><text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-family="Arial">👤</text></svg>';
+    document.getElementById('post-detail-author-name').textContent = post.author?.name || '익명';
+    document.getElementById('post-detail-time').textContent = post.time || formatDate(post.createdAt);
     document.getElementById('post-detail-category').textContent = getCategoryName(post.category);
-    document.getElementById('post-detail-body').textContent = post.content;
-    document.getElementById('post-detail-likes').textContent = post.likes;
-    document.getElementById('post-detail-comments-count').textContent = post.comments;
+    document.getElementById('post-detail-body').textContent = post.content || '';
+    document.getElementById('post-detail-likes').textContent = post.likes || 0;
+    document.getElementById('post-detail-comments-count').textContent = post.comments || 0;
     
     // Set up like button
     const likeBtn = document.getElementById('post-detail-like-btn');
@@ -1279,18 +1307,26 @@ async function createPost(postData) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${currentUser.id}`
             },
-            body: JSON.stringify({
-                ...postData,
-                author: currentUser
-            })
+            body: JSON.stringify(postData)
         });
         
         if (!response.ok) {
             throw new Error('Failed to create post');
         }
         
-        // Reload posts
-        loadPosts();
+        const result = await response.json();
+        
+        // Add the new post to local posts array for immediate display
+        if (result.post) {
+            // Add time formatting
+            result.post.time = '방금 전';
+            posts.unshift(result.post);
+            renderPosts(posts);
+        } else {
+            // Fallback: reload all posts
+            loadPosts();
+        }
+        
         await showCustomAlert('성공', '게시글이 성공적으로 작성되었습니다!');
     } catch (error) {
         console.error('Error creating post:', error);
