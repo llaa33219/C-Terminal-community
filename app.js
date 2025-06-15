@@ -54,22 +54,33 @@ async function loadConfigAndInitialize() {
 
 // Google Sign-In Setup
 function initializeGoogleSignIn(clientId) {
-    window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: handleGoogleSignIn,
-        auto_select: false,
-        cancel_on_tap_outside: false
-    });
+    try {
+        window.google.accounts.id.initialize({
+            client_id: clientId,
+            callback: handleGoogleSignIn,
+            auto_select: false,
+            cancel_on_tap_outside: false,
+            use_fedcm_for_prompt: false
+        });
 
-    window.google.accounts.id.renderButton(
-        document.getElementById('g_id_signin'),
-        {
-            theme: 'outline',
-            size: 'large',
-            text: 'signin_with',
-            shape: 'rectangular'
+        const signInDiv = document.getElementById('g_id_signin');
+        if (signInDiv) {
+            window.google.accounts.id.renderButton(signInDiv, {
+                theme: 'outline',
+                size: 'large',
+                text: 'signin_with',
+                shape: 'rectangular',
+                width: 200
+            });
         }
-    );
+    } catch (error) {
+        console.error('Google Sign-In initialization failed:', error);
+        // Show fallback login message
+        const loginDiv = document.getElementById('login-button');
+        if (loginDiv) {
+            loginDiv.innerHTML = '<span style="color: #666;">로그인 준비 중...</span>';
+        }
+    }
 
     // Check if user is already logged in (from localStorage)
     const storedUser = localStorage.getItem('currentUser');
@@ -246,7 +257,7 @@ function getSamplePosts() {
             content: '안녕하세요! C-Terminal을 처음 사용하는데 반복문 블록을 어떻게 사용하는지 궁금합니다. 특히 for문과 while문의 차이점도 알고 싶어요.',
             author: {
                 name: '코딩초보',
-                avatar: 'https://via.placeholder.com/32x32?text=👨‍💻'
+                avatar: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2NjdlZWEiLz4KPHRleHQgeD0iMTYiIHk9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIxNiI+8J+RqOKAjfCfkrs8L3RleHQ+Cjwvc3ZnPgo='
             },
             time: '2시간 전',
             likes: 5,
@@ -260,7 +271,7 @@ function getSamplePosts() {
             content: 'C-Terminal로 사칙연산이 가능한 계산기를 만들어봤습니다. 블록 코딩으로 이런 것도 만들 수 있다니 정말 신기하네요!',
             author: {
                 name: '프로그래머지망생',
-                avatar: 'https://via.placeholder.com/32x32?text=👩‍💻'
+                avatar: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiMyOGE3NDUiLz4KPHRleHQgeD0iMTYiIHk9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIxNiI+8J+RqeKAjfCfkrs8L3RleHQ+Cjwvc3ZnPgo='
             },
             time: '5시간 전',
             likes: 12,
@@ -274,7 +285,7 @@ function getSamplePosts() {
             content: 'C-Terminal을 사용해보니 블록 코딩의 직관성은 좋지만, 복잡한 로직을 구현할 때는 한계가 있는 것 같아요. 여러분은 어떻게 생각하시나요?',
             author: {
                 name: '개발자김씨',
-                avatar: 'https://via.placeholder.com/32x32?text=🧑‍💻'
+                avatar: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiNkYzM1NDUiLz4KPHRleHQgeD0iMTYiIHk9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIxNiI+8J+nkeKAjfCfkrs8L3RleHQ+Cjwvc3ZnPgo='
             },
             time: '1일 전',
             likes: 8,
