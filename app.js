@@ -225,6 +225,9 @@ function setupModals() {
     const profileEditForm = document.getElementById('profile-edit-form');
     profileEditForm.addEventListener('submit', handleProfileEdit);
     
+    // Avatar selection
+    setupAvatarSelection();
+    
     // Close modal when clicking outside
     document.querySelectorAll('.modal').forEach(modal => {
         modal.addEventListener('click', (e) => {
@@ -274,7 +277,7 @@ function getSamplePosts() {
             content: '안녕하세요! C-Terminal을 처음 사용하는데 반복문 블록을 어떻게 사용하는지 궁금합니다. 특히 for문과 while문의 차이점도 알고 싶어요.',
             author: {
                 name: '코딩초보',
-                avatar: 'data:image/svg+xml;utf8,<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="%23667eea"/><text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-family="Arial">👨‍💻</text></svg>'
+                avatar: 'data:image/svg+xml;charset=utf-8,<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="%23667eea"/><text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-family="Arial">👨‍💻</text></svg>'
             },
             time: '2시간 전',
             likes: 5,
@@ -288,7 +291,7 @@ function getSamplePosts() {
             content: 'C-Terminal로 사칙연산이 가능한 계산기를 만들어봤습니다. 블록 코딩으로 이런 것도 만들 수 있다니 정말 신기하네요!',
             author: {
                 name: '프로그래머지망생',
-                avatar: 'data:image/svg+xml;utf8,<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="%2328a745"/><text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-family="Arial">👩‍💻</text></svg>'
+                avatar: 'data:image/svg+xml;charset=utf-8,<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="%2328a745"/><text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-family="Arial">👩‍💻</text></svg>'
             },
             time: '5시간 전',
             likes: 12,
@@ -302,7 +305,7 @@ function getSamplePosts() {
             content: 'C-Terminal을 사용해보니 블록 코딩의 직관성은 좋지만, 복잡한 로직을 구현할 때는 한계가 있는 것 같아요. 여러분은 어떻게 생각하시나요?',
             author: {
                 name: '개발자김씨',
-                avatar: 'data:image/svg+xml;utf8,<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="%23dc3545"/><text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-family="Arial">🧑‍💻</text></svg>'
+                avatar: 'data:image/svg+xml;charset=utf-8,<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="%23dc3545"/><text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-family="Arial">🧑‍💻</text></svg>'
             },
             time: '1일 전',
             likes: 8,
@@ -326,17 +329,17 @@ function renderPosts(postsToRender) {
                 <span class="post-category">${getCategoryName(post.category)}</span>
                 <span class="post-time">${post.time}</span>
             </div>
-            <h3 class="post-title">${post.title}</h3>
+            <h3 class="post-title" onclick="showPostDetail('${post.id}')">${post.title}</h3>
             <div class="post-author">
                 <img src="${post.author.avatar}" alt="${post.author.name}" class="post-author-avatar">
                 <span class="post-author-name">${post.author.name}</span>
             </div>
             <p class="post-content">${post.content}</p>
             <div class="post-actions">
-                <span class="post-action ${post.liked ? 'liked' : ''}" onclick="toggleLike(${post.id})">
+                <span class="post-action ${post.liked ? 'liked' : ''}" onclick="toggleLike('${post.id}')">
                     ❤️ ${post.likes}
                 </span>
-                <span class="post-action" onclick="showComments(${post.id})">
+                <span class="post-action" onclick="showPostDetail('${post.id}')">
                     💬 ${post.comments}
                 </span>
                 <span class="post-action">
@@ -359,7 +362,7 @@ function getCategoryName(category) {
 
 async function toggleLike(postId) {
     if (!currentUser) {
-        alert('로그인이 필요합니다.');
+        await showCustomAlert('로그인 필요', '로그인이 필요합니다.');
         return;
     }
     
@@ -513,16 +516,16 @@ function renderProjects(projectsToRender) {
     `).join('');
 }
 
-function downloadProject(projectId) {
+async function downloadProject(projectId) {
     if (!currentUser) {
-        alert('로그인이 필요합니다.');
+        await showCustomAlert('로그인 필요', '로그인이 필요합니다.');
         return;
     }
     
     const project = projects.find(p => p.id === projectId);
     if (project) {
         // Simulate download
-        alert(`${project.name} 프로젝트를 다운로드합니다.`);
+        await showCustomAlert('다운로드', `${project.name} 프로젝트를 다운로드합니다.`);
         project.downloads += 1;
         renderProjects(projects);
     }
@@ -849,6 +852,37 @@ function showProfileEditModal() {
     showModal('profile-edit-modal');
 }
 
+function setupAvatarSelection() {
+    const avatarOptions = document.querySelectorAll('.avatar-option');
+    const selectedAvatarInput = document.getElementById('selected-avatar');
+    const currentAvatarPreview = document.getElementById('current-avatar-preview');
+    
+    avatarOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            // Remove previous selection
+            avatarOptions.forEach(opt => opt.classList.remove('selected'));
+            
+            // Select current option
+            option.classList.add('selected');
+            
+            // Update hidden input
+            const avatarEmoji = option.getAttribute('data-avatar');
+            selectedAvatarInput.value = avatarEmoji;
+            
+            // Update preview
+            const avatarSvg = generateAvatarSvg(avatarEmoji);
+            currentAvatarPreview.src = avatarSvg;
+        });
+    });
+}
+
+function generateAvatarSvg(emoji) {
+    const colors = ['#667eea', '#28a745', '#dc3545', '#ffc107', '#17a2b8', '#6f42c1'];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    
+    return `data:image/svg+xml;charset=utf-8,<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="${randomColor}"/><text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-family="Arial">${emoji}</text></svg>`;
+}
+
 async function loadProfileData() {
     try {
         const response = await fetch(`/api/users/${currentUser.id}/profile`, {
@@ -859,14 +893,40 @@ async function loadProfileData() {
         
         if (response.ok) {
             const profile = await response.json();
+            document.getElementById('profile-display-name').value = profile.displayName || currentUser.name || '';
             document.getElementById('profile-bio').value = profile.bio || '';
             document.getElementById('profile-website').value = profile.website || '';
             document.getElementById('profile-github').value = profile.github || '';
             document.getElementById('profile-skills').value = profile.skills ? profile.skills.join(', ') : '';
             document.getElementById('profile-location').value = profile.location || '';
+            
+            // Set current avatar
+            if (profile.avatar) {
+                document.getElementById('current-avatar-preview').src = profile.avatar;
+                document.getElementById('selected-avatar').value = profile.avatarEmoji || '';
+                
+                // Select the corresponding avatar option
+                if (profile.avatarEmoji) {
+                    const avatarOption = document.querySelector(`[data-avatar="${profile.avatarEmoji}"]`);
+                    if (avatarOption) {
+                        document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
+                        avatarOption.classList.add('selected');
+                    }
+                }
+            } else {
+                // Use current user's avatar
+                document.getElementById('current-avatar-preview').src = currentUser.picture;
+            }
+        } else {
+            // Load default values
+            document.getElementById('profile-display-name').value = currentUser.name || '';
+            document.getElementById('current-avatar-preview').src = currentUser.picture;
         }
     } catch (error) {
         console.error('Failed to load profile data:', error);
+        // Load default values
+        document.getElementById('profile-display-name').value = currentUser.name || '';
+        document.getElementById('current-avatar-preview').src = currentUser.picture;
     }
 }
 
@@ -874,13 +934,22 @@ async function handleProfileEdit(e) {
     e.preventDefault();
     
     const formData = new FormData(e.target);
+    const selectedAvatar = formData.get('avatar');
+    
     const profileData = {
+        displayName: formData.get('displayName') || '',
         bio: formData.get('bio') || '',
         website: formData.get('website') || '',
         github: formData.get('github') || '',
         skills: formData.get('skills') ? formData.get('skills').split(',').map(s => s.trim()) : [],
         location: formData.get('location') || ''
     };
+    
+    // Add avatar data if selected
+    if (selectedAvatar) {
+        profileData.avatarEmoji = selectedAvatar;
+        profileData.avatar = generateAvatarSvg(selectedAvatar);
+    }
     
     try {
         const response = await fetch(`/api/users/${currentUser.id}/profile`, {
@@ -893,6 +962,16 @@ async function handleProfileEdit(e) {
         });
         
         if (response.ok) {
+            // Update current user data if display name or avatar changed
+            if (profileData.displayName) {
+                currentUser.name = profileData.displayName;
+                updateUserInterface();
+            }
+            if (profileData.avatar) {
+                currentUser.picture = profileData.avatar;
+                updateUserInterface();
+            }
+            
             // Close modal
             document.getElementById('profile-edit-modal').classList.remove('show');
             
@@ -901,24 +980,25 @@ async function handleProfileEdit(e) {
                 loadProfile();
             }
             
-            alert('프로필이 성공적으로 업데이트되었습니다!');
+            await showCustomAlert('성공', '프로필이 성공적으로 업데이트되었습니다!');
         } else {
             throw new Error('Failed to update profile');
         }
     } catch (error) {
         console.error('Error updating profile:', error);
-        alert('프로필 업데이트 중 오류가 발생했습니다.');
+        await showCustomAlert('오류', '프로필 업데이트 중 오류가 발생했습니다.');
     }
 }
 
 // Post and Project Management Functions
 async function editPost(postId) {
     // Implementation for editing posts
-    alert('게시글 편집 기능은 곧 구현예정입니다.');
+    await showCustomAlert('알림', '게시글 편집 기능은 곧 구현예정입니다.');
 }
 
 async function deletePost(postId) {
-    if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
+    const confirmed = await showCustomConfirm('삭제 확인', '정말로 이 게시글을 삭제하시겠습니까?');
+    if (!confirmed) {
         return;
     }
     
@@ -931,24 +1011,25 @@ async function deletePost(postId) {
         });
         
         if (response.ok) {
-            alert('게시글이 삭제되었습니다.');
+            await showCustomAlert('성공', '게시글이 삭제되었습니다.');
             loadUserPosts(); // Reload posts
         } else {
             throw new Error('Failed to delete post');
         }
     } catch (error) {
         console.error('Error deleting post:', error);
-        alert('게시글 삭제 중 오류가 발생했습니다.');
+        await showCustomAlert('오류', '게시글 삭제 중 오류가 발생했습니다.');
     }
 }
 
 async function editProject(projectId) {
     // Implementation for editing projects
-    alert('프로젝트 편집 기능은 곧 구현예정입니다.');
+    await showCustomAlert('알림', '프로젝트 편집 기능은 곧 구현예정입니다.');
 }
 
 async function deleteProject(projectId) {
-    if (!confirm('정말로 이 프로젝트를 삭제하시겠습니까?')) {
+    const confirmed = await showCustomConfirm('삭제 확인', '정말로 이 프로젝트를 삭제하시겠습니까?');
+    if (!confirmed) {
         return;
     }
     
@@ -961,44 +1042,152 @@ async function deleteProject(projectId) {
         });
         
         if (response.ok) {
-            alert('프로젝트가 삭제되었습니다.');
+            await showCustomAlert('성공', '프로젝트가 삭제되었습니다.');
             loadUserProjects(); // Reload projects
         } else {
             throw new Error('Failed to delete project');
         }
     } catch (error) {
         console.error('Error deleting project:', error);
-        alert('프로젝트 삭제 중 오류가 발생했습니다.');
+        await showCustomAlert('오류', '프로젝트 삭제 중 오류가 발생했습니다.');
     }
 }
 
-// Comments Functions  
-async function showComments(postId) {
-    if (!currentUser) {
-        alert('로그인이 필요합니다.');
+// Custom Alert/Confirm Functions
+function showCustomAlert(title, message) {
+    return new Promise((resolve) => {
+        document.getElementById('alert-title').textContent = title;
+        document.getElementById('alert-message').textContent = message;
+        
+        const modal = document.getElementById('custom-alert-modal');
+        const okBtn = document.getElementById('alert-ok-btn');
+        
+        const handleOk = () => {
+            modal.classList.remove('show');
+            okBtn.removeEventListener('click', handleOk);
+            resolve();
+        };
+        
+        okBtn.addEventListener('click', handleOk);
+        modal.classList.add('show');
+    });
+}
+
+function showCustomConfirm(title, message) {
+    return new Promise((resolve) => {
+        document.getElementById('confirm-title').textContent = title;
+        document.getElementById('confirm-message').textContent = message;
+        
+        const modal = document.getElementById('custom-confirm-modal');
+        const okBtn = document.getElementById('confirm-ok-btn');
+        const cancelBtn = document.getElementById('confirm-cancel-btn');
+        
+        const handleOk = () => {
+            modal.classList.remove('show');
+            cleanup();
+            resolve(true);
+        };
+        
+        const handleCancel = () => {
+            modal.classList.remove('show');
+            cleanup();
+            resolve(false);
+        };
+        
+        const cleanup = () => {
+            okBtn.removeEventListener('click', handleOk);
+            cancelBtn.removeEventListener('click', handleCancel);
+        };
+        
+        okBtn.addEventListener('click', handleOk);
+        cancelBtn.addEventListener('click', handleCancel);
+        modal.classList.add('show');
+    });
+}
+
+// Post Detail Functions
+async function showPostDetail(postId) {
+    const post = posts.find(p => p.id == postId);
+    if (!post) {
+        await showCustomAlert('오류', '게시글을 찾을 수 없습니다.');
         return;
     }
+    
+    // Populate post detail modal
+    document.getElementById('post-detail-title').textContent = post.title;
+    document.getElementById('post-detail-avatar').src = post.author.avatar;
+    document.getElementById('post-detail-author-name').textContent = post.author.name;
+    document.getElementById('post-detail-time').textContent = post.time;
+    document.getElementById('post-detail-category').textContent = getCategoryName(post.category);
+    document.getElementById('post-detail-body').textContent = post.content;
+    document.getElementById('post-detail-likes').textContent = post.likes;
+    document.getElementById('post-detail-comments-count').textContent = post.comments;
+    
+    // Set up like button
+    const likeBtn = document.getElementById('post-detail-like-btn');
+    likeBtn.className = `action-btn ${post.liked ? 'liked' : ''}`;
+    likeBtn.onclick = () => toggleLike(postId);
+    
+    // Load comments
+    await loadPostComments(postId);
+    
+    // Set up comment form
+    setupCommentForm(postId);
+    
+    // Show modal
+    document.getElementById('post-detail-modal').classList.add('show');
+}
+
+async function loadPostComments(postId) {
+    const commentsList = document.getElementById('comments-list');
+    commentsList.innerHTML = '<div class="loading"><div class="spinner"></div>댓글을 불러오는 중...</div>';
     
     try {
         const response = await fetch(`/api/comments?postId=${postId}`);
         const data = await response.json();
         
-        // For now, just show alert with comment count
         if (data.comments && data.comments.length > 0) {
-            alert(`${data.comments.length}개의 댓글이 있습니다.`);
+            commentsList.innerHTML = data.comments.map(comment => `
+                <div class="comment-item">
+                    <div class="comment-header">
+                        <span class="comment-author">${comment.authorName || '익명'}</span>
+                        <span class="comment-time">${formatDate(comment.createdAt)}</span>
+                    </div>
+                    <div class="comment-content">${comment.content}</div>
+                </div>
+            `).join('');
         } else {
-            const comment = prompt('첫 번째 댓글을 작성해보세요:');
-            if (comment && comment.trim()) {
-                await createComment(postId, comment.trim());
-            }
+            commentsList.innerHTML = '<p class="text-center">아직 댓글이 없습니다. 첫 번째 댓글을 작성해보세요!</p>';
         }
     } catch (error) {
-        console.error('Failed to show comments:', error);
-        const comment = prompt('댓글을 작성해보세요:');
-        if (comment && comment.trim()) {
-            await createComment(postId, comment.trim());
-        }
+        console.error('Failed to load comments:', error);
+        commentsList.innerHTML = '<p class="text-center">댓글을 불러오는 중 오류가 발생했습니다.</p>';
     }
+}
+
+function setupCommentForm(postId) {
+    const commentInput = document.getElementById('comment-input');
+    const submitBtn = document.getElementById('comment-submit-btn');
+    
+    // Clear previous event listeners
+    const newSubmitBtn = submitBtn.cloneNode(true);
+    submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
+    
+    newSubmitBtn.addEventListener('click', async () => {
+        if (!currentUser) {
+            await showCustomAlert('로그인 필요', '댓글을 작성하려면 로그인이 필요합니다.');
+            return;
+        }
+        
+        const content = commentInput.value.trim();
+        if (!content) {
+            await showCustomAlert('입력 오류', '댓글 내용을 입력해주세요.');
+            return;
+        }
+        
+        await createComment(postId, content);
+        commentInput.value = '';
+    });
 }
 
 async function createComment(postId, content) {
@@ -1016,19 +1205,30 @@ async function createComment(postId, content) {
         });
         
         if (response.ok) {
-            alert('댓글이 작성되었습니다!');
-            // Reload posts to update comment count
-            if (currentPage === 'community') {
-                loadPosts();
-            } else if (currentPage === 'profile') {
-                loadUserPosts();
+            await showCustomAlert('성공', '댓글이 작성되었습니다!');
+            
+            // Reload comments
+            await loadPostComments(postId);
+            
+            // Update comment count in post
+            const post = posts.find(p => p.id == postId);
+            if (post) {
+                post.comments += 1;
+                document.getElementById('post-detail-comments-count').textContent = post.comments;
+                
+                // Update posts list if visible
+                if (currentPage === 'community') {
+                    renderPosts(posts);
+                } else if (currentPage === 'profile') {
+                    loadUserPosts();
+                }
             }
         } else {
             throw new Error('Failed to create comment');
         }
     } catch (error) {
         console.error('Error creating comment:', error);
-        alert('댓글 작성 중 오류가 발생했습니다.');
+        await showCustomAlert('오류', '댓글 작성 중 오류가 발생했습니다.');
     }
 }
 
@@ -1091,10 +1291,10 @@ async function createPost(postData) {
         
         // Reload posts
         loadPosts();
-        alert('게시글이 성공적으로 작성되었습니다!');
+        await showCustomAlert('성공', '게시글이 성공적으로 작성되었습니다!');
     } catch (error) {
         console.error('Error creating post:', error);
-        alert('게시글 작성 중 오류가 발생했습니다.');
+        await showCustomAlert('오류', '게시글 작성 중 오류가 발생했습니다.');
     }
 }
 
@@ -1121,9 +1321,9 @@ async function uploadProject(projectData) {
         
         // Reload projects
         loadProjects();
-        alert('프로젝트가 성공적으로 업로드되었습니다!');
+        await showCustomAlert('성공', '프로젝트가 성공적으로 업로드되었습니다!');
     } catch (error) {
         console.error('Error uploading project:', error);
-        alert('프로젝트 업로드 중 오류가 발생했습니다.');
+        await showCustomAlert('오류', '프로젝트 업로드 중 오류가 발생했습니다.');
     }
 } 

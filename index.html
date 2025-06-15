@@ -286,6 +286,34 @@
             </div>
             <form id="profile-edit-form">
                 <div class="form-group">
+                    <label for="profile-display-name">닉네임</label>
+                    <input type="text" id="profile-display-name" name="displayName" placeholder="표시될 닉네임을 입력하세요">
+                </div>
+                <div class="form-group">
+                    <label for="profile-avatar">프로필 이미지</label>
+                    <div class="avatar-selection">
+                        <div class="current-avatar">
+                            <img id="current-avatar-preview" src="" alt="현재 아바타" class="avatar-preview">
+                            <span>현재 아바타</span>
+                        </div>
+                        <div class="avatar-options">
+                            <div class="avatar-option" data-avatar="👨‍💻">👨‍💻</div>
+                            <div class="avatar-option" data-avatar="👩‍💻">👩‍💻</div>
+                            <div class="avatar-option" data-avatar="🧑‍💻">🧑‍💻</div>
+                            <div class="avatar-option" data-avatar="👨‍🎓">👨‍🎓</div>
+                            <div class="avatar-option" data-avatar="👩‍🎓">👩‍🎓</div>
+                            <div class="avatar-option" data-avatar="🧑‍🎓">🧑‍🎓</div>
+                            <div class="avatar-option" data-avatar="👨‍🔬">👨‍🔬</div>
+                            <div class="avatar-option" data-avatar="👩‍🔬">👩‍🔬</div>
+                            <div class="avatar-option" data-avatar="🧑‍🔬">🧑‍🔬</div>
+                            <div class="avatar-option" data-avatar="🤖">🤖</div>
+                            <div class="avatar-option" data-avatar="👾">👾</div>
+                            <div class="avatar-option" data-avatar="🎯">🎯</div>
+                        </div>
+                        <input type="hidden" id="selected-avatar" name="avatar" value="">
+                    </div>
+                </div>
+                <div class="form-group">
                     <label for="profile-bio">자기소개</label>
                     <textarea id="profile-bio" name="bio" placeholder="자신을 소개해주세요" rows="4"></textarea>
                 </div>
@@ -310,6 +338,84 @@
                     <button type="submit" class="btn-primary">저장</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Post Detail Modal -->
+    <div id="post-detail-modal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="post-detail-title">게시글 제목</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="post-detail-content">
+                <div class="post-detail-header">
+                    <div class="post-detail-author">
+                        <img id="post-detail-avatar" src="" alt="" class="post-author-avatar">
+                        <div class="post-detail-author-info">
+                            <span id="post-detail-author-name" class="post-author-name"></span>
+                            <span id="post-detail-time" class="post-time"></span>
+                        </div>
+                    </div>
+                    <span id="post-detail-category" class="post-category"></span>
+                </div>
+                <div id="post-detail-body" class="post-detail-body"></div>
+                <div class="post-detail-actions">
+                    <button id="post-detail-like-btn" class="action-btn">
+                        <span class="action-icon">❤️</span>
+                        <span id="post-detail-likes">0</span>
+                    </button>
+                    <button id="post-detail-comment-btn" class="action-btn">
+                        <span class="action-icon">💬</span>
+                        <span id="post-detail-comments-count">0</span>
+                    </button>
+                </div>
+                <div class="comments-section">
+                    <div class="comments-header">
+                        <h3>댓글</h3>
+                        <div class="comment-form">
+                            <textarea id="comment-input" placeholder="댓글을 작성해주세요..." rows="3"></textarea>
+                            <button id="comment-submit-btn" class="btn-primary">댓글 작성</button>
+                        </div>
+                    </div>
+                    <div id="comments-list" class="comments-list">
+                        <!-- Comments will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Alert Modal -->
+    <div id="custom-alert-modal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 id="alert-title">알림</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="alert-content">
+                <p id="alert-message"></p>
+                <div class="alert-actions">
+                    <button id="alert-ok-btn" class="btn-primary">확인</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirm Modal -->
+    <div id="custom-confirm-modal" class="modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2 id="confirm-title">확인</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="confirm-content">
+                <p id="confirm-message"></p>
+                <div class="confirm-actions">
+                    <button id="confirm-cancel-btn" class="btn-secondary">취소</button>
+                    <button id="confirm-ok-btn" class="btn-primary">확인</button>
+                </div>
+            </div>
         </div>
     </div>
 
