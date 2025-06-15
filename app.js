@@ -213,13 +213,17 @@ function setupModals() {
     projectForm.addEventListener('submit', handleProjectSubmit);
     
     // Modal close buttons
-    document.querySelectorAll('.modal-close, #cancel-post, #cancel-project').forEach(btn => {
+    document.querySelectorAll('.modal-close, #cancel-post, #cancel-project, #cancel-profile-edit').forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.modal').forEach(modal => {
                 modal.classList.remove('show');
             });
         });
     });
+    
+    // Profile edit modal
+    const profileEditForm = document.getElementById('profile-edit-form');
+    profileEditForm.addEventListener('submit', handleProfileEdit);
     
     // Close modal when clicking outside
     document.querySelectorAll('.modal').forEach(modal => {
@@ -237,15 +241,28 @@ function showModal(modalId) {
 }
 
 // Community Functions
-function loadPosts() {
+async function loadPosts() {
     const container = document.getElementById('posts-container');
     container.innerHTML = '<div class="loading"><div class="spinner"></div>게시글을 불러오는 중...</div>';
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+        const response = await fetch('/api/posts');
+        const data = await response.json();
+        
+        if (data.posts && data.posts.length > 0) {
+            posts = data.posts;
+            renderPosts(posts);
+        } else {
+            // If no posts, show sample posts for demo
+            posts = getSamplePosts();
+            renderPosts(posts);
+        }
+    } catch (error) {
+        console.error('Failed to load posts:', error);
+        // Fallback to sample posts
         posts = getSamplePosts();
         renderPosts(posts);
-    }, 1000);
+    }
 }
 
 function getSamplePosts() {
@@ -257,7 +274,7 @@ function getSamplePosts() {
             content: '안녕하세요! C-Terminal을 처음 사용하는데 반복문 블록을 어떻게 사용하는지 궁금합니다. 특히 for문과 while문의 차이점도 알고 싶어요.',
             author: {
                 name: '코딩초보',
-                avatar: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2NjdlZWEiLz4KPHRleHQgeD0iMTYiIHk9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIxNiI+8J+RqOKAjfCfkrs8L3RleHQ+Cjwvc3ZnPgo='
+                avatar: 'data:image/svg+xml;utf8,<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="%23667eea"/><text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-family="Arial">👨‍💻</text></svg>'
             },
             time: '2시간 전',
             likes: 5,
@@ -271,7 +288,7 @@ function getSamplePosts() {
             content: 'C-Terminal로 사칙연산이 가능한 계산기를 만들어봤습니다. 블록 코딩으로 이런 것도 만들 수 있다니 정말 신기하네요!',
             author: {
                 name: '프로그래머지망생',
-                avatar: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiMyOGE3NDUiLz4KPHRleHQgeD0iMTYiIHk9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIxNiI+8J+RqeKAjfCfkrs8L3RleHQ+Cjwvc3ZnPgo='
+                avatar: 'data:image/svg+xml;utf8,<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="%2328a745"/><text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-family="Arial">👩‍💻</text></svg>'
             },
             time: '5시간 전',
             likes: 12,
@@ -285,7 +302,7 @@ function getSamplePosts() {
             content: 'C-Terminal을 사용해보니 블록 코딩의 직관성은 좋지만, 복잡한 로직을 구현할 때는 한계가 있는 것 같아요. 여러분은 어떻게 생각하시나요?',
             author: {
                 name: '개발자김씨',
-                avatar: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiNkYzM1NDUiLz4KPHRleHQgeD0iMTYiIHk9IjIwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIxNiI+8J+nkeKAjfCfkrs8L3RleHQ+Cjwvc3ZnPgo='
+                avatar: 'data:image/svg+xml;utf8,<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="16" fill="%23dc3545"/><text x="16" y="22" text-anchor="middle" fill="white" font-size="16" font-family="Arial">🧑‍💻</text></svg>'
             },
             time: '1일 전',
             likes: 8,
@@ -340,17 +357,44 @@ function getCategoryName(category) {
     return categories[category] || category;
 }
 
-function toggleLike(postId) {
+async function toggleLike(postId) {
     if (!currentUser) {
         alert('로그인이 필요합니다.');
         return;
     }
     
-    const post = posts.find(p => p.id === postId);
-    if (post) {
-        post.liked = !post.liked;
-        post.likes += post.liked ? 1 : -1;
-        renderPosts(posts);
+    try {
+        const response = await fetch('/api/likes', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${currentUser.id}`
+            },
+            body: JSON.stringify({
+                type: 'post',
+                targetId: postId
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            // Update local post data
+            const post = posts.find(p => p.id === postId);
+            if (post) {
+                post.liked = data.liked;
+                post.likes += data.liked ? 1 : -1;
+                renderPosts(posts);
+            }
+        }
+    } catch (error) {
+        console.error('Failed to toggle like:', error);
+        // Fallback to local toggle
+        const post = posts.find(p => p.id === postId);
+        if (post) {
+            post.liked = !post.liked;
+            post.likes += post.liked ? 1 : -1;
+            renderPosts(posts);
+        }
     }
 }
 
@@ -376,15 +420,28 @@ function handlePostSubmit(e) {
 }
 
 // Projects Functions
-function loadProjects() {
+async function loadProjects() {
     const container = document.getElementById('projects-container');
     container.innerHTML = '<div class="loading"><div class="spinner"></div>프로젝트를 불러오는 중...</div>';
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+        const response = await fetch('/api/projects');
+        const data = await response.json();
+        
+        if (data.projects && data.projects.length > 0) {
+            projects = data.projects;
+            renderProjects(projects);
+        } else {
+            // If no projects, show sample projects for demo
+            projects = getSampleProjects();
+            renderProjects(projects);
+        }
+    } catch (error) {
+        console.error('Failed to load projects:', error);
+        // Fallback to sample projects
         projects = getSampleProjects();
         renderProjects(projects);
-    }, 1000);
+    }
 }
 
 function getSampleProjects() {
@@ -513,7 +570,7 @@ function handleProjectSubmit(e) {
 }
 
 // Profile Functions
-function loadProfile() {
+async function loadProfile() {
     const profileContent = document.getElementById('profile-content');
     
     if (!currentUser) {
@@ -526,60 +583,453 @@ function loadProfile() {
         return;
     }
     
+    // Load user stats
+    const stats = await loadUserStats();
+    
     profileContent.innerHTML = `
         <div class="profile-header">
             <img src="${currentUser.picture}" alt="${currentUser.name}" class="profile-avatar">
             <div class="profile-info">
                 <h1>${currentUser.name}</h1>
                 <p>${currentUser.email}</p>
+                <button class="btn-secondary" onclick="showProfileEditModal()" style="margin-top: 10px;">프로필 편집</button>
                 <div class="profile-stats">
                     <div class="profile-stat">
-                        <div class="profile-stat-number">12</div>
+                        <div class="profile-stat-number">${stats.postsCount}</div>
                         <div class="profile-stat-label">게시글</div>
                     </div>
                     <div class="profile-stat">
-                        <div class="profile-stat-number">5</div>
+                        <div class="profile-stat-number">${stats.projectsCount}</div>
                         <div class="profile-stat-label">프로젝트</div>
                     </div>
                     <div class="profile-stat">
-                        <div class="profile-stat-number">28</div>
-                        <div class="profile-stat-label">좋아요</div>
+                        <div class="profile-stat-number">${stats.likesReceived}</div>
+                        <div class="profile-stat-label">받은 좋아요</div>
                     </div>
                 </div>
             </div>
         </div>
         
         <div class="profile-tabs">
-            <button class="btn-secondary" onclick="loadUserPosts()">내 게시글</button>
-            <button class="btn-secondary" onclick="loadUserProjects()">내 프로젝트</button>
-            <button class="btn-secondary" onclick="loadUserActivity()">활동 내역</button>
+            <button class="btn-secondary profile-tab-btn active" onclick="loadUserPosts()" data-tab="posts">내 게시글</button>
+            <button class="btn-secondary profile-tab-btn" onclick="loadUserProjects()" data-tab="projects">내 프로젝트</button>
+            <button class="btn-secondary profile-tab-btn" onclick="loadUserActivity()" data-tab="activity">활동 내역</button>
         </div>
         
         <div id="profile-tab-content" class="mt-4">
-            <p class="text-center text-secondary">탭을 선택해주세요.</p>
+            <div class="loading"><div class="spinner"></div>데이터를 불러오는 중...</div>
         </div>
     `;
+    
+    // Load first tab content
+    loadUserPosts();
 }
 
-function loadUserPosts() {
-    document.getElementById('profile-tab-content').innerHTML = `
-        <h3>내 게시글</h3>
-        <p>여기에 사용자의 게시글 목록이 표시됩니다.</p>
-    `;
+async function loadUserStats() {
+    try {
+        const response = await fetch(`/api/users/${currentUser.id}/stats`, {
+            headers: {
+                'Authorization': `Bearer ${currentUser.id}`
+            }
+        });
+        
+        if (response.ok) {
+            return await response.json();
+        }
+    } catch (error) {
+        console.error('Failed to load user stats:', error);
+    }
+    
+    // Fallback stats
+    return {
+        postsCount: 0,
+        projectsCount: 0,
+        likesReceived: 0
+    };
 }
 
-function loadUserProjects() {
-    document.getElementById('profile-tab-content').innerHTML = `
-        <h3>내 프로젝트</h3>
-        <p>여기에 사용자의 프로젝트 목록이 표시됩니다.</p>
-    `;
+async function loadUserPosts() {
+    updateProfileTabActive('posts');
+    const content = document.getElementById('profile-tab-content');
+    content.innerHTML = '<div class="loading"><div class="spinner"></div>내 게시글을 불러오는 중...</div>';
+    
+    try {
+        const response = await fetch(`/api/posts?author=${currentUser.id}`, {
+            headers: {
+                'Authorization': `Bearer ${currentUser.id}`
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.posts && data.posts.length > 0) {
+                content.innerHTML = `
+                    <h3>내 게시글</h3>
+                    <div class="posts-container">
+                        ${data.posts.map(post => `
+                            <div class="post-card">
+                                <div class="post-header">
+                                    <span class="post-category">${getCategoryName(post.category)}</span>
+                                    <span class="post-time">${formatDate(post.createdAt)}</span>
+                                </div>
+                                <h3 class="post-title">${post.title}</h3>
+                                <p class="post-content">${post.content.substring(0, 100)}...</p>
+                                <div class="post-actions">
+                                    <span class="post-action">❤️ ${post.likes}</span>
+                                    <span class="post-action">💬 ${post.comments}</span>
+                                    <button class="btn-secondary" onclick="editPost('${post.id}')">편집</button>
+                                    <button class="btn-danger" onclick="deletePost('${post.id}')">삭제</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <h3>내 게시글</h3>
+                    <p class="text-center">아직 작성한 게시글이 없습니다.</p>
+                    <div class="text-center">
+                        <button class="btn-primary" onclick="showPage('community')">첫 게시글 작성하기</button>
+                    </div>
+                `;
+            }
+        }
+    } catch (error) {
+        console.error('Failed to load user posts:', error);
+        content.innerHTML = `
+            <h3>내 게시글</h3>
+            <p class="text-center">게시글을 불러오는 중 오류가 발생했습니다.</p>
+        `;
+    }
 }
 
-function loadUserActivity() {
-    document.getElementById('profile-tab-content').innerHTML = `
-        <h3>활동 내역</h3>
-        <p>여기에 사용자의 활동 내역이 표시됩니다.</p>
-    `;
+async function loadUserProjects() {
+    updateProfileTabActive('projects');
+    const content = document.getElementById('profile-tab-content');
+    content.innerHTML = '<div class="loading"><div class="spinner"></div>내 프로젝트를 불러오는 중...</div>';
+    
+    try {
+        const response = await fetch(`/api/projects?author=${currentUser.id}`, {
+            headers: {
+                'Authorization': `Bearer ${currentUser.id}`
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.projects && data.projects.length > 0) {
+                content.innerHTML = `
+                    <h3>내 프로젝트</h3>
+                    <div class="projects-grid">
+                        ${data.projects.map(project => `
+                            <div class="project-card">
+                                <div class="project-thumbnail">📁</div>
+                                <div class="project-info">
+                                    <h3 class="project-title">${project.name}</h3>
+                                    <p class="project-description">${project.description}</p>
+                                    <div class="project-meta">
+                                        <span>업로드: ${formatDate(project.createdAt)}</span>
+                                        <span>다운로드: ${project.downloads}</span>
+                                    </div>
+                                    <div class="project-tags">
+                                        ${project.tags.map(tag => `<span class="project-tag">${tag}</span>`).join('')}
+                                    </div>
+                                    <div class="project-actions" style="margin-top: 1rem;">
+                                        <span class="post-action">❤️ ${project.likes}</span>
+                                        <button class="btn-secondary" onclick="editProject('${project.id}')">편집</button>
+                                        <button class="btn-danger" onclick="deleteProject('${project.id}')">삭제</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <h3>내 프로젝트</h3>
+                    <p class="text-center">아직 업로드한 프로젝트가 없습니다.</p>
+                    <div class="text-center">
+                        <button class="btn-primary" onclick="showPage('projects')">첫 프로젝트 업로드하기</button>
+                    </div>
+                `;
+            }
+        }
+    } catch (error) {
+        console.error('Failed to load user projects:', error);
+        content.innerHTML = `
+            <h3>내 프로젝트</h3>
+            <p class="text-center">프로젝트를 불러오는 중 오류가 발생했습니다.</p>
+        `;
+    }
+}
+
+async function loadUserActivity() {
+    updateProfileTabActive('activity');
+    const content = document.getElementById('profile-tab-content');
+    content.innerHTML = '<div class="loading"><div class="spinner"></div>활동 내역을 불러오는 중...</div>';
+    
+    try {
+        const response = await fetch(`/api/users/${currentUser.id}/activity`, {
+            headers: {
+                'Authorization': `Bearer ${currentUser.id}`
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            content.innerHTML = `
+                <h3>활동 내역</h3>
+                <div class="activity-timeline">
+                    ${data.activities ? data.activities.map(activity => `
+                        <div class="activity-item">
+                            <div class="activity-icon">${getActivityIcon(activity.type)}</div>
+                            <div class="activity-content">
+                                <p>${activity.description}</p>
+                                <span class="activity-time">${formatDate(activity.createdAt)}</span>
+                            </div>
+                        </div>
+                    `).join('') : '<p class="text-center">아직 활동 내역이 없습니다.</p>'}
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Failed to load user activity:', error);
+        content.innerHTML = `
+            <h3>활동 내역</h3>
+            <p class="text-center">활동 내역을 불러오는 중 오류가 발생했습니다.</p>
+        `;
+    }
+}
+
+function updateProfileTabActive(activeTab) {
+    document.querySelectorAll('.profile-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('data-tab') === activeTab) {
+            btn.classList.add('active');
+        }
+    });
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
+    const diffDays = Math.floor(diff / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 1) {
+        const diffHours = Math.floor(diff / (1000 * 60 * 60));
+        return diffHours < 1 ? '방금 전' : `${diffHours}시간 전`;
+    } else if (diffDays < 7) {
+        return `${diffDays}일 전`;
+    } else {
+        return date.toLocaleDateString('ko-KR');
+    }
+}
+
+function getActivityIcon(type) {
+    const icons = {
+        'post': '📝',
+        'project': '📁',
+        'like': '❤️',
+        'comment': '💬',
+        'download': '⬇️'
+    };
+    return icons[type] || '📌';
+}
+
+// Profile Edit Functions
+function showProfileEditModal() {
+    if (!currentUser) {
+        alert('로그인이 필요합니다.');
+        return;
+    }
+    
+    // Load current profile data
+    loadProfileData();
+    showModal('profile-edit-modal');
+}
+
+async function loadProfileData() {
+    try {
+        const response = await fetch(`/api/users/${currentUser.id}/profile`, {
+            headers: {
+                'Authorization': `Bearer ${currentUser.id}`
+            }
+        });
+        
+        if (response.ok) {
+            const profile = await response.json();
+            document.getElementById('profile-bio').value = profile.bio || '';
+            document.getElementById('profile-website').value = profile.website || '';
+            document.getElementById('profile-github').value = profile.github || '';
+            document.getElementById('profile-skills').value = profile.skills ? profile.skills.join(', ') : '';
+            document.getElementById('profile-location').value = profile.location || '';
+        }
+    } catch (error) {
+        console.error('Failed to load profile data:', error);
+    }
+}
+
+async function handleProfileEdit(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const profileData = {
+        bio: formData.get('bio') || '',
+        website: formData.get('website') || '',
+        github: formData.get('github') || '',
+        skills: formData.get('skills') ? formData.get('skills').split(',').map(s => s.trim()) : [],
+        location: formData.get('location') || ''
+    };
+    
+    try {
+        const response = await fetch(`/api/users/${currentUser.id}/profile`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${currentUser.id}`
+            },
+            body: JSON.stringify(profileData)
+        });
+        
+        if (response.ok) {
+            // Close modal
+            document.getElementById('profile-edit-modal').classList.remove('show');
+            
+            // Reload profile page
+            if (currentPage === 'profile') {
+                loadProfile();
+            }
+            
+            alert('프로필이 성공적으로 업데이트되었습니다!');
+        } else {
+            throw new Error('Failed to update profile');
+        }
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        alert('프로필 업데이트 중 오류가 발생했습니다.');
+    }
+}
+
+// Post and Project Management Functions
+async function editPost(postId) {
+    // Implementation for editing posts
+    alert('게시글 편집 기능은 곧 구현예정입니다.');
+}
+
+async function deletePost(postId) {
+    if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/posts/${postId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${currentUser.id}`
+            }
+        });
+        
+        if (response.ok) {
+            alert('게시글이 삭제되었습니다.');
+            loadUserPosts(); // Reload posts
+        } else {
+            throw new Error('Failed to delete post');
+        }
+    } catch (error) {
+        console.error('Error deleting post:', error);
+        alert('게시글 삭제 중 오류가 발생했습니다.');
+    }
+}
+
+async function editProject(projectId) {
+    // Implementation for editing projects
+    alert('프로젝트 편집 기능은 곧 구현예정입니다.');
+}
+
+async function deleteProject(projectId) {
+    if (!confirm('정말로 이 프로젝트를 삭제하시겠습니까?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/projects/${projectId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${currentUser.id}`
+            }
+        });
+        
+        if (response.ok) {
+            alert('프로젝트가 삭제되었습니다.');
+            loadUserProjects(); // Reload projects
+        } else {
+            throw new Error('Failed to delete project');
+        }
+    } catch (error) {
+        console.error('Error deleting project:', error);
+        alert('프로젝트 삭제 중 오류가 발생했습니다.');
+    }
+}
+
+// Comments Functions  
+async function showComments(postId) {
+    if (!currentUser) {
+        alert('로그인이 필요합니다.');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/comments?postId=${postId}`);
+        const data = await response.json();
+        
+        // For now, just show alert with comment count
+        if (data.comments && data.comments.length > 0) {
+            alert(`${data.comments.length}개의 댓글이 있습니다.`);
+        } else {
+            const comment = prompt('첫 번째 댓글을 작성해보세요:');
+            if (comment && comment.trim()) {
+                await createComment(postId, comment.trim());
+            }
+        }
+    } catch (error) {
+        console.error('Failed to show comments:', error);
+        const comment = prompt('댓글을 작성해보세요:');
+        if (comment && comment.trim()) {
+            await createComment(postId, comment.trim());
+        }
+    }
+}
+
+async function createComment(postId, content) {
+    try {
+        const response = await fetch('/api/comments', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${currentUser.id}`
+            },
+            body: JSON.stringify({
+                postId: postId,
+                content: content
+            })
+        });
+        
+        if (response.ok) {
+            alert('댓글이 작성되었습니다!');
+            // Reload posts to update comment count
+            if (currentPage === 'community') {
+                loadPosts();
+            } else if (currentPage === 'profile') {
+                loadUserPosts();
+            }
+        } else {
+            throw new Error('Failed to create comment');
+        }
+    } catch (error) {
+        console.error('Error creating comment:', error);
+        alert('댓글 작성 중 오류가 발생했습니다.');
+    }
 }
 
 // Filter Functions

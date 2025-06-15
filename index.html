@@ -278,6 +278,41 @@
         </div>
     </div>
 
+    <div id="profile-edit-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>프로필 편집</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="profile-edit-form">
+                <div class="form-group">
+                    <label for="profile-bio">자기소개</label>
+                    <textarea id="profile-bio" name="bio" placeholder="자신을 소개해주세요" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="profile-website">웹사이트</label>
+                    <input type="url" id="profile-website" name="website" placeholder="https://your-website.com">
+                </div>
+                <div class="form-group">
+                    <label for="profile-github">GitHub</label>
+                    <input type="text" id="profile-github" name="github" placeholder="github-username">
+                </div>
+                <div class="form-group">
+                    <label for="profile-skills">기술 스택</label>
+                    <input type="text" id="profile-skills" name="skills" placeholder="JavaScript, Python, C++ (쉼표로 구분)">
+                </div>
+                <div class="form-group">
+                    <label for="profile-location">위치</label>
+                    <input type="text" id="profile-location" name="location" placeholder="서울, 대한민국">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancel-profile-edit">취소</button>
+                    <button type="submit" class="btn-primary">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html> 

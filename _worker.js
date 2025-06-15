@@ -48,12 +48,13 @@ async function handleAPIRequest(request, env, path, method) {
   const segments = path.split('/').filter(Boolean);
   const resource = segments[1]; // api/[resource]
   const id = segments[2]; // api/resource/[id]
+  const subResource = segments[3]; // api/resource/id/[subResource]
 
   switch (resource) {
     case 'config':
       return await getConfig(env);
     case 'users':
-      return await handleUsers(request, env, method, id);
+      return await handleUsers(request, env, method, id, subResource);
     case 'posts':
       return await handlePosts(request, env, method, id);
     case 'projects':
@@ -89,16 +90,25 @@ async function getConfig(env) {
 }
 
 // User Management
-async function handleUsers(request, env, method, id) {
+async function handleUsers(request, env, method, id, subResource) {
   switch (method) {
     case 'POST':
       return await createOrUpdateUser(request, env);
     case 'GET':
-      if (id) {
+      if (id && subResource === 'stats') {
+        return await getUserStats(env, id);
+      } else if (id && subResource === 'profile') {
+        return await getUserProfile(env, id);
+      } else if (id && subResource === 'activity') {
+        return await getUserActivity(env, id);
+      } else if (id) {
         return await getUser(env, id);
       }
       return await getUsers(env);
     case 'PUT':
+      if (id && subResource === 'profile') {
+        return await updateUserProfile(request, env, id);
+      }
       return await updateUser(request, env, id);
     default:
       return methodNotAllowed();
@@ -150,6 +160,120 @@ async function getUser(env, userId) {
     });
   } catch (error) {
     return new Response(JSON.stringify({ error: 'Failed to get user' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function getUserStats(env, userId) {
+  try {
+    // Count user's posts
+    const postsIndexData = await env.POSTS.get('__index__') || '[]';
+    const postsIndex = JSON.parse(postsIndexData);
+    const userPosts = postsIndex.filter(post => post.authorId === userId);
+    
+    // Count user's projects
+    const projectsIndexData = await env.PROJECTS.get('__index__') || '[]';
+    const projectsIndex = JSON.parse(projectsIndexData);
+    const userProjects = projectsIndex.filter(project => project.authorId === userId);
+    
+    // Count likes received (simplified calculation)
+    let likesReceived = 0;
+    for (const post of userPosts) {
+      const postData = await env.POSTS.get(post.id);
+      if (postData) {
+        const postObj = JSON.parse(postData);
+        likesReceived += postObj.likes || 0;
+      }
+    }
+    
+    for (const project of userProjects) {
+      const projectData = await env.PROJECTS.get(project.id);
+      if (projectData) {
+        const projectObj = JSON.parse(projectData);
+        likesReceived += projectObj.likes || 0;
+      }
+    }
+
+    const stats = {
+      postsCount: userPosts.length,
+      projectsCount: userProjects.length,
+      likesReceived: likesReceived
+    };
+
+    return new Response(JSON.stringify(stats), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: 'Failed to get user stats' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function getUserProfile(env, userId) {
+  try {
+    const profileData = await env.USERS.get(`profile_${userId}`);
+    if (!profileData) {
+      return new Response(JSON.stringify({
+        bio: '',
+        website: '',
+        github: '',
+        skills: [],
+        location: ''
+      }), {
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    return new Response(profileData, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: 'Failed to get user profile' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function updateUserProfile(request, env, userId) {
+  try {
+    const profileData = await request.json();
+    const userId_auth = await getUserIdFromAuth(request);
+    
+    if (!userId_auth || userId_auth !== userId) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    await env.USERS.put(`profile_${userId}`, JSON.stringify(profileData));
+
+    return new Response(JSON.stringify({ success: true, profile: profileData }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: 'Failed to update profile' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function getUserActivity(env, userId) {
+  try {
+    // For now, return empty activity (can be expanded later)
+    const activities = [];
+    
+    return new Response(JSON.stringify({ activities }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: 'Failed to get user activity' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
@@ -221,6 +345,7 @@ async function getPosts(request, env) {
   try {
     const url = new URL(request.url);
     const category = url.searchParams.get('category');
+    const author = url.searchParams.get('author');
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const offset = parseInt(url.searchParams.get('offset') || '0');
 
@@ -231,6 +356,11 @@ async function getPosts(request, env) {
     // Filter by category if specified
     if (category && category !== 'all') {
       posts = posts.filter(post => post.category === category);
+    }
+    
+    // Filter by author if specified
+    if (author) {
+      posts = posts.filter(post => post.authorId === author);
     }
 
     // Sort by creation date (newest first)
@@ -256,6 +386,51 @@ async function getPosts(request, env) {
     });
   } catch (error) {
     return new Response(JSON.stringify({ error: 'Failed to get posts' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function deletePost(request, env, postId) {
+  try {
+    const userId = await getUserIdFromAuth(request);
+    
+    if (!userId) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Get post to verify ownership
+    const postData = await env.POSTS.get(postId);
+    if (!postData) {
+      return new Response(JSON.stringify({ error: 'Post not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const post = JSON.parse(postData);
+    if (post.authorId !== userId) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Delete post
+    await env.POSTS.delete(postId);
+    
+    // Update posts index
+    await removeFromPostsIndex(env, postId);
+
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: 'Failed to delete post' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
@@ -361,6 +536,7 @@ async function getProjects(request, env) {
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const offset = parseInt(url.searchParams.get('offset') || '0');
     const tag = url.searchParams.get('tag');
+    const author = url.searchParams.get('author');
 
     // Get projects index
     const indexData = await env.PROJECTS.get('__index__') || '[]';
@@ -369,6 +545,11 @@ async function getProjects(request, env) {
     // Filter by tag if specified
     if (tag) {
       projects = projects.filter(project => project.tags && project.tags.includes(tag));
+    }
+    
+    // Filter by author if specified
+    if (author) {
+      projects = projects.filter(project => project.authorId === author);
     }
 
     // Sort by creation date (newest first)
@@ -394,6 +575,58 @@ async function getProjects(request, env) {
     });
   } catch (error) {
     return new Response(JSON.stringify({ error: 'Failed to get projects' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function deleteProject(request, env, projectId) {
+  try {
+    const userId = await getUserIdFromAuth(request);
+    
+    if (!userId) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Get project to verify ownership
+    const projectData = await env.PROJECTS.get(projectId);
+    if (!projectData) {
+      return new Response(JSON.stringify({ error: 'Project not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const project = JSON.parse(projectData);
+    if (project.authorId !== userId) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Delete project file from R2
+    try {
+      await env.FILES.delete(project.fileKey);
+    } catch (error) {
+      console.error('Failed to delete project file:', error);
+    }
+
+    // Delete project metadata
+    await env.PROJECTS.delete(projectId);
+    
+    // Update projects index
+    await removeFromProjectsIndex(env, projectId);
+
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: 'Failed to delete project' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
@@ -445,6 +678,46 @@ async function createComment(request, env) {
     });
   } catch (error) {
     return new Response(JSON.stringify({ error: 'Failed to create comment' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+async function getComments(request, env, postId) {
+  try {
+    const url = new URL(request.url);
+    const postIdParam = url.searchParams.get('postId') || postId;
+    
+    if (!postIdParam) {
+      return new Response(JSON.stringify({ error: 'Post ID is required' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Get all comments (in a real implementation, you'd use an index)
+    const comments = [];
+    const list = await env.COMMENTS.list();
+    
+    for (const key of list.keys) {
+      const commentData = await env.COMMENTS.get(key.name);
+      if (commentData) {
+        const comment = JSON.parse(commentData);
+        if (comment.postId === postIdParam) {
+          comments.push(comment);
+        }
+      }
+    }
+
+    // Sort by creation date (newest first)
+    comments.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    return new Response(JSON.stringify({ comments }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: 'Failed to get comments' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
@@ -545,6 +818,18 @@ async function updatePostsIndex(env, postId, post) {
   }
 }
 
+async function removeFromPostsIndex(env, postId) {
+  try {
+    const indexData = await env.POSTS.get('__index__') || '[]';
+    const index = JSON.parse(indexData);
+    
+    const filteredIndex = index.filter(post => post.id !== postId);
+    await env.POSTS.put('__index__', JSON.stringify(filteredIndex));
+  } catch (error) {
+    console.error('Failed to remove from posts index:', error);
+  }
+}
+
 async function updateProjectsIndex(env, projectId, project) {
   try {
     const indexData = await env.PROJECTS.get('__index__') || '[]';
@@ -563,6 +848,18 @@ async function updateProjectsIndex(env, projectId, project) {
     await env.PROJECTS.put('__index__', JSON.stringify(index));
   } catch (error) {
     console.error('Failed to update projects index:', error);
+  }
+}
+
+async function removeFromProjectsIndex(env, projectId) {
+  try {
+    const indexData = await env.PROJECTS.get('__index__') || '[]';
+    const index = JSON.parse(indexData);
+    
+    const filteredIndex = index.filter(project => project.id !== projectId);
+    await env.PROJECTS.put('__index__', JSON.stringify(filteredIndex));
+  } catch (error) {
+    console.error('Failed to remove from projects index:', error);
   }
 }
 
