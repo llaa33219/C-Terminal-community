@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C-Terminal Community</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <div class="nav-container">
+                <div class="logo">
+                    <img src="/logo.svg" alt="C-Terminal" class="logo-img">
+                    <span class="logo-text">C-Terminal</span>
+                </div>
+                <div class="nav-links">
+                    <a href="#" class="nav-link" data-page="home">홈</a>
+                    <a href="#" class="nav-link" data-page="community">커뮤니티</a>
+                    <a href="#" class="nav-link" data-page="projects">프로젝트</a>
+                    <a href="#" class="nav-link" data-page="learn">학습하기</a>
+                </div>
+                <div class="nav-actions">
+                    <div id="login-button" class="login-btn">
+                        <div id="g_id_signin"></div>
+                    </div>
+                    <div id="user-menu" class="user-menu" style="display: none;">
+                        <img id="user-avatar" class="user-avatar" src="" alt="">
+                        <span id="user-name" class="user-name"></span>
+                        <div class="dropdown">
+                            <button class="dropdown-btn">▼</button>
+                            <div class="dropdown-content">
+                                <a href="#" data-page="profile">프로필</a>
+                                <a href="#" id="logout-btn">로그아웃</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main">
+        <!-- Home Page -->
+        <div id="home-page" class="page active">
+            <section class="hero">
+                <div class="hero-content">
+                    <h1 class="hero-title">코딩을 터미널처럼,<br>생각을 코드로</h1>
+                    <p class="hero-subtitle">C-Terminal은 블록 코딩과 터미널 기반 출력을 결합한 새로운 코딩 교육 플랫폼입니다.</p>
+                    <div class="hero-actions">
+                        <button class="btn-primary" data-page="learn">시작하기</button>
+                        <button class="btn-secondary" data-page="community">더 알아보기</button>
+                    </div>
+                </div>
+                <div class="hero-demo">
+                    <div class="terminal-preview">
+                        <div class="terminal-header">
+                            <div class="terminal-controls">
+                                <span class="control red"></span>
+                                <span class="control yellow"></span>
+                                <span class="control green"></span>
+                            </div>
+                            <span class="terminal-title">C-Terminal v1.0</span>
+                        </div>
+                        <div class="terminal-body">
+                            <div class="terminal-line">$ 안녕하세요!</div>
+                            <div class="terminal-line">$ 반갑습니다!</div>
+                            <div class="terminal-line">$ 안녕하세요!</div>
+                            <div class="terminal-line">$ 반갑습니다!</div>
+                            <div class="terminal-line">$ 안녕하세요!</div>
+                            <div class="terminal-line">1</div>
+                            <div class="terminal-line">2</div>
+                            <div class="terminal-line">3</div>
+                            <div class="terminal-line">4</div>
+                            <div class="terminal-line">5</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="features">
+                <div class="container">
+                    <h2 class="section-title">C-Terminal의 특별한 기능들</h2>
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">📦</div>
+                            <h3>블록 코딩</h3>
+                            <p>직관적인 블록 인터페이스로 코딩 논리를 쉽게 배울 수 있습니다.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">⚡</div>
+                            <h3>터미널 출력</h3>
+                            <p>실제 프로그래밍 환경과 동일한 터미널 기반 코딩 경험을 제공합니다.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">👥</div>
+                            <h3>활발한 커뮤니티</h3>
+                            <p>다른 사용자들과 아이디어를 공유하고 함께 성장할 수 있습니다.</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🚀</div>
+                            <h3>프로젝트 공유</h3>
+                            <p>자신만의 프로젝트를 쉽게 공유하고 피드백을 받을 수 있습니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="how-it-works">
+                <div class="container">
+                    <h2 class="section-title">어떻게 작동하나요?</h2>
+                    <div class="steps">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <h3>블록으로 코딩 작성</h3>
+                            <p>직관적인 블록을 드래그 앤 드롭하여 프로그램을 작성합니다.</p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <h3>실행 버튼 클릭</h3>
+                            <p>코드를 실행하여 터미널에서 결과를 확인합니다.</p>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <h3>프로젝트 저장 및 공유</h3>
+                            <p>작성한 프로젝트를 저장하고 커뮤니티와 공유합니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Community Page -->
+        <div id="community-page" class="page">
+            <div class="container">
+                <div class="page-header">
+                    <h1>커뮤니티</h1>
+                    <button id="create-post-btn" class="btn-primary">새 게시글 작성</button>
+                </div>
+                
+                <div class="community-filters">
+                    <button class="filter-btn active" data-filter="all">전체</button>
+                    <button class="filter-btn" data-filter="question">질문</button>
+                    <button class="filter-btn" data-filter="showcase">프로젝트 공유</button>
+                    <button class="filter-btn" data-filter="discussion">토론</button>
+                    <button class="filter-btn" data-filter="help">도움말</button>
+                </div>
+
+                <div id="posts-container" class="posts-container">
+                    <!-- Posts will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects Page -->
+        <div id="projects-page" class="page">
+            <div class="container">
+                <div class="page-header">
+                    <h1>프로젝트</h1>
+                    <button id="upload-project-btn" class="btn-primary">프로젝트 업로드</button>
+                </div>
+                
+                <div id="projects-container" class="projects-grid">
+                    <!-- Projects will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Page -->
+        <div id="profile-page" class="page">
+            <div class="container">
+                <div id="profile-content">
+                    <!-- Profile content will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Learn Page -->
+        <div id="learn-page" class="page">
+            <div class="container">
+                <h1>학습하기</h1>
+                <p class="learn-description">C-Terminal에서 제공하는 다양한 학습 자료들을 확인해보세요.</p>
+                
+                <div class="learn-categories">
+                    <div class="learn-card">
+                        <h3>기초 프로그래밍</h3>
+                        <p>프로그래밍의 기본 개념부터 차근차근 배워보세요.</p>
+                        <button class="btn-secondary">시작하기</button>
+                    </div>
+                    <div class="learn-card">
+                        <h3>블록 코딩 마스터</h3>
+                        <p>블록 코딩을 활용한 다양한 프로그래밍 패턴을 학습하세요.</p>
+                        <button class="btn-secondary">시작하기</button>
+                    </div>
+                    <div class="learn-card">
+                        <h3>프로젝트 실습</h3>
+                        <p>실제 프로젝트를 만들어보며 경험을 쌓아보세요.</p>
+                        <button class="btn-secondary">시작하기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <div id="post-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>새 게시글 작성</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="post-form">
+                <div class="form-group">
+                    <label for="post-category">카테고리</label>
+                    <select id="post-category" required>
+                        <option value="">선택해주세요</option>
+                        <option value="question">질문</option>
+                        <option value="showcase">프로젝트 공유</option>
+                        <option value="discussion">토론</option>
+                        <option value="help">도움말</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="post-title">제목</label>
+                    <input type="text" id="post-title" required placeholder="게시글 제목을 입력하세요">
+                </div>
+                <div class="form-group">
+                    <label for="post-content">내용</label>
+                    <textarea id="post-content" required placeholder="게시글 내용을 입력하세요" rows="10"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="post-files">파일 첨부</label>
+                    <input type="file" id="post-files" multiple>
+                    <div class="file-info">지원 형식: 이미지, 문서, .ctm 파일</div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancel-post">취소</button>
+                    <button type="submit" class="btn-primary">게시하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="project-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>프로젝트 업로드</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="project-form">
+                <div class="form-group">
+                    <label for="project-name">프로젝트 이름</label>
+                    <input type="text" id="project-name" required placeholder="프로젝트 이름을 입력하세요">
+                </div>
+                <div class="form-group">
+                    <label for="project-description">설명</label>
+                    <textarea id="project-description" required placeholder="프로젝트에 대한 설명을 입력하세요" rows="5"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="project-file">.ctm 파일</label>
+                    <input type="file" id="project-file" accept=".ctm" required>
+                    <div class="file-info">C-Terminal 프로젝트 파일(.ctm)만 업로드 가능합니다.</div>
+                </div>
+                <div class="form-group">
+                    <label for="project-tags">태그</label>
+                    <input type="text" id="project-tags" placeholder="태그를 쉼표로 구분하여 입력하세요 (예: 초급, 게임, 알고리즘)">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancel-project">취소</button>
+                    <button type="submit" class="btn-primary">업로드</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html> 
