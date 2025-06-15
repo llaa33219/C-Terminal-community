@@ -48,6 +48,8 @@ async function handleAPIRequest(request, env, path, method) {
   const id = segments[2]; // api/resource/[id]
 
   switch (resource) {
+    case 'config':
+      return await getConfig(env);
     case 'users':
       return await handleUsers(request, env, method, id);
     case 'posts':
@@ -63,6 +65,24 @@ async function handleAPIRequest(request, env, path, method) {
         status: 404,
         headers: { 'Content-Type': 'application/json' }
       });
+  }
+}
+
+// Config API
+async function getConfig(env) {
+  try {
+    const config = {
+      googleClientId: env.GOOGLE_CLIENT_ID || ''
+    };
+    
+    return new Response(JSON.stringify(config), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ error: 'Failed to get config' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
 

@@ -10,9 +10,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeApp() {
-    // Initialize Google Sign-In
-    initializeGoogleSignIn();
-    
     // Set up navigation
     setupNavigation();
     
@@ -25,12 +22,40 @@ function initializeApp() {
     
     // Show home page by default
     showPage('home');
+    
+    // Initialize Google Sign-In after ensuring the API is loaded
+    waitForGoogleAPI();
+}
+
+function waitForGoogleAPI() {
+    if (typeof window.google !== 'undefined' && window.google.accounts) {
+        // Load config from server and initialize Google Sign-In
+        loadConfigAndInitialize();
+    } else {
+        // Wait and check again
+        setTimeout(waitForGoogleAPI, 100);
+    }
+}
+
+async function loadConfigAndInitialize() {
+    try {
+        const response = await fetch('/api/config');
+        const config = await response.json();
+        
+        if (config.googleClientId) {
+            initializeGoogleSignIn(config.googleClientId);
+        } else {
+            console.error('Google Client ID not configured');
+        }
+    } catch (error) {
+        console.error('Failed to load config:', error);
+    }
 }
 
 // Google Sign-In Setup
-function initializeGoogleSignIn() {
+function initializeGoogleSignIn(clientId) {
     window.google.accounts.id.initialize({
-        client_id: 'YOUR_GOOGLE_CLIENT_ID', // Replace with actual client ID
+        client_id: clientId,
         callback: handleGoogleSignIn,
         auto_select: false,
         cancel_on_tap_outside: false
